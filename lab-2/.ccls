@@ -1,0 +1,6 @@
+%compile_commands.json
+%c -x c
+%c -isystem/usr/lib/gcc/arm-none-eabi/12.2.1/include
+%c -isystem/usr/lib/gcc/arm-none-eabi/12.2.1/include-fixed
+%c -isystem/usr/arm-none-eabi/include
+
