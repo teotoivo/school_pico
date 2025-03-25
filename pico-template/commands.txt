@@ -1,0 +1,8 @@
+flashing the pico:
+openocd -f interface/cmsis-dap.cfg -f target/rp2040.cfg -c "program blink.elf verify reset exit"
+
+
+terminal:
+/dev/ttyACM0 115200
+escaping that:
+CTRL+a > k
