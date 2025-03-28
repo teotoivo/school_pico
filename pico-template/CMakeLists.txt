@@ -2,8 +2,6 @@ cmake_minimum_required(VERSION 3.13)
 
 # Set the Pico SDK path (update it with your own path)
 set(PICO_SDK_PATH $ENV{PICO_SDK_PATH})
-message(STATUS "Using Pico SDK from: ${PICO_SDK_PATH}")
-
 
 # Set the Pico board
 set(PICO_BOARD pico_w)
