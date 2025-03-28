@@ -84,13 +84,11 @@ int main() {
     }
 
     if (led_on) {
-      printf("%d\n", brightness);
       if (brightness > 1000)
         brightness = 1000;
       if (brightness < 0)
         brightness = 0;
 
-      printf("%d\n", brightness);
       set_brightness(LED_D1, brightness);
       set_brightness(LED_D2, brightness);
       set_brightness(LED_D3, brightness);
