@@ -4,6 +4,7 @@
 #include <pico/stdio.h>
 #include <pico/time.h>
 #include <stdbool.h>
+#include <stdint.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -161,6 +162,7 @@ void process_command(const char *line) {
 
 // Execute the step sequence for the specified number of steps.
 void run_stepper_steps(int steps_to_run) {
+  const int32_t SLEEP_DELAY = 1500;
   if (steps_to_run > 0) {
     for (int i = 0; i < steps_to_run; i++) {
       gpio_put(STEPPER_CONTROLLER_0, steps[current_step][0]);
@@ -168,7 +170,7 @@ void run_stepper_steps(int steps_to_run) {
       gpio_put(STEPPER_CONTROLLER_2, steps[current_step][2]);
       gpio_put(STEPPER_CONTROLLER_3, steps[current_step][3]);
       current_step = (current_step + 1) % 8;
-      sleep_us(1000);
+      sleep_us(SLEEP_DELAY);
     }
   } else if (steps_to_run < 0) {
     for (int i = 0; i < abs(steps_to_run); i++) {
@@ -177,7 +179,7 @@ void run_stepper_steps(int steps_to_run) {
       gpio_put(STEPPER_CONTROLLER_2, steps[current_step][2]);
       gpio_put(STEPPER_CONTROLLER_3, steps[current_step][3]);
       current_step = (current_step - 1 + 8) % 8;
-      sleep_us(1000);
+      sleep_us(SLEEP_DELAY);
     }
   }
 }
