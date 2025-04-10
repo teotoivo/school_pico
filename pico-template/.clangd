@@ -1,0 +1,12 @@
+CompileFlags:
+  Add:
+    [
+      "-x",
+      "c",
+      "-isystem",
+      "/usr/lib/gcc/arm-none-eabi/12.2.1/include",
+      "-isystem",
+      "/usr/lib/gcc/arm-none-eabi/12.2.1/include-fixed",
+      "-isystem",
+      "/usr/arm-none-eabi/include",
+    ]

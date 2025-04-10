@@ -12,13 +12,15 @@
 
 #define BRIGHTNES_SCROLL_SPEED 1
 
+#define DEFAULT_BRIGHTNESS 500
+
 int main() {
   uint count = 0;
 
   bool led_on = false;
   bool power_held_down = false;
 
-  uint brightness = 1000; // 0 - 1000  0.1% precision
+  uint brightness = DEFAULT_BRIGHTNESS; // 0 - 1000  0.1% precision
 
   setup_pwm(LED_D1);
   setup_pwm(LED_D2);
@@ -42,18 +44,23 @@ int main() {
     } else if (!power_held_down &&
                button_pressed(SW_1)) { // if button is pressed for the first
                                        // time toggle led
-      led_on = !led_on;
+      if (led_on && brightness == 0) {
+        brightness = DEFAULT_BRIGHTNESS;
+
+      } else {
+        led_on = !led_on;
+      }
       power_held_down = true;
       sleep_ms(50); // wait for switch bounce
     }
 
     if (led_on) {
-      if (button_pressed(SW_0)) {
+      if (button_pressed(SW_2)) {
         if (brightness > 0) {
           brightness--;
           sleep_ms(BRIGHTNES_SCROLL_SPEED);
         }
-      } else if (button_pressed(SW_2)) {
+      } else if (button_pressed(SW_0)) {
         if (brightness < 1000) {
           brightness++;
           sleep_ms(BRIGHTNES_SCROLL_SPEED);

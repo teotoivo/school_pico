@@ -32,6 +32,14 @@ file(GLOB_RECURSE SRC_FILES "src/*.c")
 add_executable(${PROJECT_NAME}
   ${SRC_FILES}
 )
+
+
+target_compile_options(${PROJECT_NAME} PRIVATE
+  -Wall
+  -Wextra
+  -Wpedantic
+)
+
 target_include_directories(${PROJECT_NAME}
   PRIVATE
     ${CMAKE_CURRENT_SOURCE_DIR}/include

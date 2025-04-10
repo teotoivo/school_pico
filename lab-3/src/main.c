@@ -18,7 +18,13 @@
 
 // Global variables: default steps per revolution and current stepping index.
 uint steps_per_rev = 4096;
-uint current_step = 0;
+
+// is from 0 - 7 tracks where in the motor it currently is
+uint microstep_index = 0;
+
+// absolute motor position from the calib point
+uint64_t current_step = 0;
+
 bool is_calibrated = false; // Indicates if calibration has been performed
 
 static queue_t event_queue;
@@ -48,7 +54,6 @@ const uint8_t steps[8][4] = {
 int main() {
   // Initialize serial communication
   stdio_init_all();
-  sleep_ms(3000); // Give time for the serial console to connect
 
   // Initialize all necessary peripherals
   init_peripherals();
@@ -98,6 +103,9 @@ void calibrate(void) {
     steps_arr[i] = steps;
   }
 
+  current_step = 0;
+  microstep_index = 0;
+
   steps_per_rev = (steps_arr[0] + steps_arr[1] + steps_arr[2]) / 3;
   is_calibrated = true;
 }
@@ -145,15 +153,15 @@ void process_command(const char *line) {
     }
   } else if (startsWith(line, "calib")) {
     calibrate();
-    printf("Calibration done.\n");
-    printf("Steps per rev %d\n", steps_per_rev);
-    stdio_flush();
+    printf("Calibration done.\r\n");
+    printf("Steps per rev %d\r\n", steps_per_rev);
   } else if (startsWith(line, "status")) {
     printf("System status:\n");
     printf("  Calibrated: %s\n", is_calibrated ? "Yes" : "No");
-    if (is_calibrated)
+    if (is_calibrated) {
       printf("  Steps per revolution: %d\n", steps_per_rev);
-    else
+      printf("  Current position: %lld\n", current_step);
+    } else
       printf("  Steps per revolution: not available\n");
   } else {
     printf("Unknown command: %s\n", line);
@@ -162,23 +170,27 @@ void process_command(const char *line) {
 
 // Execute the step sequence for the specified number of steps.
 void run_stepper_steps(int steps_to_run) {
-  const int32_t SLEEP_DELAY = 1500;
+  const int32_t SLEEP_DELAY = 1000;
   if (steps_to_run > 0) {
     for (int i = 0; i < steps_to_run; i++) {
-      gpio_put(STEPPER_CONTROLLER_0, steps[current_step][0]);
-      gpio_put(STEPPER_CONTROLLER_1, steps[current_step][1]);
-      gpio_put(STEPPER_CONTROLLER_2, steps[current_step][2]);
-      gpio_put(STEPPER_CONTROLLER_3, steps[current_step][3]);
-      current_step = (current_step + 1) % 8;
+      current_step = (current_step + 1) % steps_per_rev;
+      microstep_index = (microstep_index + 1) % 8;
+      gpio_put(STEPPER_CONTROLLER_0, steps[microstep_index][0]);
+      gpio_put(STEPPER_CONTROLLER_1, steps[microstep_index][1]);
+      gpio_put(STEPPER_CONTROLLER_2, steps[microstep_index][2]);
+      gpio_put(STEPPER_CONTROLLER_3, steps[microstep_index][3]);
+
       sleep_us(SLEEP_DELAY);
     }
   } else if (steps_to_run < 0) {
     for (int i = 0; i < abs(steps_to_run); i++) {
-      gpio_put(STEPPER_CONTROLLER_0, steps[current_step][0]);
-      gpio_put(STEPPER_CONTROLLER_1, steps[current_step][1]);
-      gpio_put(STEPPER_CONTROLLER_2, steps[current_step][2]);
-      gpio_put(STEPPER_CONTROLLER_3, steps[current_step][3]);
-      current_step = (current_step - 1 + 8) % 8;
+      microstep_index = (microstep_index - 1 + 8) % 8;
+      current_step = (current_step - 1 + steps_per_rev) % steps_per_rev;
+      gpio_put(STEPPER_CONTROLLER_0, steps[microstep_index][0]);
+      gpio_put(STEPPER_CONTROLLER_1, steps[microstep_index][1]);
+      gpio_put(STEPPER_CONTROLLER_2, steps[microstep_index][2]);
+      gpio_put(STEPPER_CONTROLLER_3, steps[microstep_index][3]);
+
       sleep_us(SLEEP_DELAY);
     }
   }

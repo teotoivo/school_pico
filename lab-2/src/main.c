@@ -27,17 +27,11 @@ void gpio_callback(uint gpio, uint32_t event_mask) {
   if (gpio == ROT_A && (event_mask & GPIO_IRQ_EDGE_RISE)) {
 
     if (gpio_get(ROT_B) == 0) {
-      // clockwise turn
-      if (led_on) {
-        int rot_direction = 1;
-        queue_try_add(&events, &rot_direction);
-      }
+      int rot_direction = 1;
+      queue_try_add(&events, &rot_direction);
     } else {
-      // counter clockwise turn
-      if (led_on) {
-        int rot_direction = -1;
-        queue_try_add(&events, &rot_direction);
-      }
+      int rot_direction = -1;
+      queue_try_add(&events, &rot_direction);
     }
   }
 }
@@ -64,7 +58,9 @@ int main() {
   while (true) {
     int rot_direction;
     while (queue_try_remove(&events, &rot_direction)) {
-      brightness += rot_direction * SCROLL_SPEED;
+      if (led_on) {
+        brightness += rot_direction * SCROLL_SPEED;
+      }
     }
 
     if (sw_held_down && !button_pressed(ROT_SW)) {
