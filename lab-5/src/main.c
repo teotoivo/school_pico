@@ -3,9 +3,13 @@
 #include "pico/stdlib.h"
 #include "utils.h"
 #include <hardware/gpio.h>
+#include <hardware/timer.h>
 #include <pico/time.h>
 #include <stdint.h>
 #include <stdio.h>
+
+#define LOG(fmt, ...)                                                          \
+  printf("%lld s: " fmt "\n", (uint64_t)(time_us_64() / 1000000), ##__VA_ARGS__)
 
 int main() {
   stdio_init_all(); // needed for uart
@@ -25,9 +29,21 @@ int main() {
   i2c_init_custom(EEPROM_PORT, EEPROM_sda_pin, EEPROM_scl_pin,
                   EEPROM_BAUD_RATE);
 
+  // offset addresses from max address to store led states at the end of eeprom
   uint16_t addresses[3][2] = {{EEPROM_MAX_ADDRESS - 5, EEPROM_MAX_ADDRESS - 6},
                               {EEPROM_MAX_ADDRESS - 3, EEPROM_MAX_ADDRESS - 2},
                               {EEPROM_MAX_ADDRESS - 1, EEPROM_MAX_ADDRESS}};
+
+  // // CORRUPT EEPROM to simulate data failure
+  // eeprom_write_byte(addresses[0][0], 0xAA); // invalid value
+  // eeprom_write_byte(addresses[0][1], 0xBB); // not ~0xAA
+  // eeprom_write_byte(addresses[1][0], 0xCC); // invalid value
+  // eeprom_write_byte(addresses[1][1], 0xDD); // not ~0xCC
+  // eeprom_write_byte(addresses[2][0], 0xEE); // invalid value
+  // eeprom_write_byte(addresses[2][1], 0xFF); // not ~0xEE
+
+  clear_terminal();
+  LOG("BOOT");
 
   // load led states
   for (int i = 0; i < 3; i++) {
@@ -51,10 +67,14 @@ int main() {
       led_state[0] = 0;
       led_state[1] = 1;
       led_state[2] = 0;
+      LOG("Led states not found resetting to default");
       break;
     }
   }
-
+  LOG("Led states loaded");
+  for (int i = 0; i < 3; i++) {
+    LOG("LED %d: %s", i, led_state[i] ? "ON" : "OFF");
+  }
   // Loop forever
   while (true) {
     for (int i = 0; i < 3; i++) {
@@ -65,6 +85,8 @@ int main() {
 
           eeprom_write_byte(addresses[i][0], led_state[i]);
           eeprom_write_byte(addresses[i][1], (uint8_t)(~led_state[i]));
+
+          LOG("LED %d: %s", i, led_state[i] ? "ON" : "OFF");
         }
       } else {
         button_held[i] = false;

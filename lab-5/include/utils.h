@@ -9,4 +9,5 @@ void init_led_pin(uint8_t pin);
 bool button_pressed(uint8_t pin);
 void i2c_init_custom(i2c_inst_t *i2c, uint16_t sda_pin, uint16_t scl_pin,
                      uint32_t baudrate);
+void clear_terminal();
 #endif

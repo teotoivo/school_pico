@@ -2,6 +2,7 @@
 #include "hardware/i2c.h"
 #include "pico/stdlib.h"
 #include <stdint.h>
+#include <stdio.h>
 
 void init_led_pin(uint8_t pin) {
   gpio_init(pin);
@@ -27,4 +28,10 @@ void i2c_init_custom(i2c_inst_t *i2c, uint16_t sda_pin, uint16_t scl_pin,
 
   gpio_pull_up(sda_pin);
   gpio_pull_up(scl_pin);
+}
+
+void clear_terminal() {
+  // ANSI escape code to clear screen and move cursor to top-left
+  printf("\033[2J\033[H");
+  fflush(stdout);
 }
