@@ -1,5 +1,6 @@
 #include "eeprom.h"
 #include "hardware_definitions.h"
+#include "loging.h"
 #include "pico/stdlib.h"
 #include "utils.h"
 #include <hardware/gpio.h>
@@ -7,9 +8,27 @@
 #include <pico/time.h>
 #include <stdint.h>
 #include <stdio.h>
+#include <string.h>
 
 #define LOG(fmt, ...)                                                          \
-  printf("%lld s: " fmt "\n", (uint64_t)(time_us_64() / 1000000), ##__VA_ARGS__)
+  do {                                                                         \
+    /* Create a temporary buffer for the formatted log entry */                \
+    char log_buffer[128];                                                      \
+                                                                               \
+    /* Include timestamp in the formatted string */                            \
+    int len = snprintf(log_buffer, sizeof(log_buffer), "%lld s: " fmt,         \
+                       (uint64_t)(time_us_64() / 1000000), ##__VA_ARGS__);     \
+                                                                               \
+    /* Ensure the string fits in the buffer */                                 \
+    if ((uint32_t)len >= sizeof(log_buffer)) {                                 \
+      log_buffer[sizeof(log_buffer) - 1] =                                     \
+          '\0'; /* Null-terminate if overflow */                               \
+    }                                                                          \
+                                                                               \
+    printf("%s\n", log_buffer);                                                \
+                                                                               \
+    write_log_entry(log_buffer);                                               \
+  } while (0)
 
 int main() {
   stdio_init_all(); // needed for uart
@@ -75,6 +94,9 @@ int main() {
   for (int i = 0; i < 3; i++) {
     LOG("LED %d: %s", i, led_state[i] ? "ON" : "OFF");
   }
+
+  char input[10]; // Buffer to store the user input
+
   // Loop forever
   while (true) {
     for (int i = 0; i < 3; i++) {
@@ -92,7 +114,19 @@ int main() {
         button_held[i] = false;
       }
       gpio_put(leds[i], led_state[i]);
-      sleep_ms(100);
+      sleep_ms(20);
+    }
+
+    if (get_user_input(input, sizeof(input))) {
+
+      if (strcmp(input, "read") == 0) {
+        read_log();
+      } else if (strcmp(input, "erase") == 0) {
+        erase_log();
+        write_log_entry("Log erased");
+      } else {
+        printf("Invalid command\n");
+      }
     }
   }
 }
