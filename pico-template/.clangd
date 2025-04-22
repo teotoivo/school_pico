@@ -1,12 +1,7 @@
 CompileFlags:
-  Add:
-    [
-      "-x",
-      "c",
-      "-isystem",
-      "/usr/lib/gcc/arm-none-eabi/12.2.1/include",
-      "-isystem",
-      "/usr/lib/gcc/arm-none-eabi/12.2.1/include-fixed",
-      "-isystem",
-      "/usr/arm-none-eabi/include",
-    ]
+  Add: [
+    "-I/usr/lib/gcc/arm-none-eabi/13.2.1/include",
+    "-I/usr/lib/gcc/arm-none-eabi/13.2.1/include-fixed",
+    "-I/usr/lib/arm-none-eabi/include",  # normalized path from ../../../arm-none-eabi/include
+  ]
+
