@@ -13,12 +13,12 @@ bool send_command(const char *cmd, const char *expected_response,
                   char *response_buffer, uint32_t timeout_ms) {
 
   uart_write_blocking(uart1, (const uint8_t *)cmd, strlen(cmd));
+  uart_write_blocking(uart1, (const uint8_t *)"\r\n", 2);
 
-  absolute_time_t timeout_time = make_timeout_time_ms(timeout_ms);
   size_t i = 0;
 
-  while (!time_reached(timeout_time)) {
-    if (uart_is_readable(uart1)) {
+  if (uart_is_readable_within_us(uart1, 1000 * timeout_ms)) {
+    while (uart_is_readable_within_us(uart1, 1000 * timeout_ms)) {
       char c = uart_getc(uart1);
 
       if (i < MAX_LORA_STRING - 1) { // -1 to leave space for \0
@@ -30,8 +30,6 @@ bool send_command(const char *cmd, const char *expected_response,
   }
 
   response_buffer[i] = '\0';
-
-  printf("cmd: %s\nres:%s\n\n", cmd, response_buffer);
 
   if (strstr(response_buffer, expected_response) != NULL) {
     return true;

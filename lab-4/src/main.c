@@ -2,6 +2,7 @@
 #include "hardware_definitions.h"
 #include "pico/stdlib.h"
 #include "utils.h"
+#include <ctype.h>
 #include <hardware/gpio.h>
 #include <hardware/structs/io_bank0.h>
 #include <hardware/uart.h>
@@ -15,6 +16,22 @@
 #define BAUD_RATE 9600
 
 void program();
+
+void modify_string(char *str) {
+  int i = 0, j = 0;
+  while (str[i]) {
+    // Remove colons
+    if (str[i] == ':') {
+      i++;
+      continue;
+    }
+    // Convert to lowercase
+    str[j] = tolower(str[i]);
+    i++;
+    j++;
+  }
+  str[j] = '\0'; // Null-terminate the string
+}
 
 int main() {
   // Initialize chosen serial port
@@ -52,7 +69,7 @@ void program() {
 
     bool connected = false;
     for (uint8_t i = 0; i < MAX_TRIES; i++) {
-      if (send_command("AT\n", "OK", res, 500)) {
+      if (send_command("AT", "+AT: OK", res, 500)) {
         printf("Connected\n");
         connected = true;
         break;
@@ -64,8 +81,20 @@ void program() {
       break;
     }
 
-    if (send_command("AT+VER\r", "+VER", res, 500)) {
+    if (send_command("AT+VER", "+VER:", res, 500)) {
       printf("Firmware version: %s\n", res);
+    } else {
+      printf("Module stopped responding\n");
+      break;
+    }
+
+    if (send_command("AT+ID=DevEui", "+ID: DevEui, ", res, 500)) {
+
+      char *substring =
+          strstr(res, "+ID: DevEui, ") + strlen("+ID: DevEui, ") - 1;
+      modify_string(res);
+
+      printf("DevEui: %s\n", substring);
     } else {
       printf("Module stopped responding\n");
       break;
